@@ -1,4 +1,4 @@
-from kafka_utils.kafka_utils import KafkaConsumer, KafkaProducer
+from engines.kafka import KafkaConsumer, KafkaProducer
 
 
 class EventConsumer:

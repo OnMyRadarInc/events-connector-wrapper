@@ -1,3 +1,4 @@
+from event_utils.abstract import AbstractConsumer, AbstractProducer
 from confluent_kafka import Consumer, Producer
 
 
@@ -21,7 +22,7 @@ class KafkaConfig:
         }
 
 
-class KafkaConsumer(KafkaConfig):
+class KafkaConsumer(AbstractConsumer, KafkaConfig):
     """
     Class to create a kafka consumer
     """
@@ -43,7 +44,7 @@ class KafkaConsumer(KafkaConfig):
         return self.kafka_consumer.poll(timeout=timeout)
 
 
-class KafkaProducer(KafkaConfig):
+class KafkaProducer(AbstractProducer, KafkaConfig):
     """
     Class to create a kafka producer
     """

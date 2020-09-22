@@ -1,10 +1,10 @@
 from setuptools import setup
 
 setup(
-    name='event-connectors-wrapper-test2',
-    url='https://github.com/tykiblood/kafka-wrapper',
+    name='event-connectors-wrapper',
+    url='https://github.com/OnMyRadarInc/events-connector-wrapper',
     author='OMR',
-    author_email='ingesql1992@hotmail.com',
+    author_email='onmyradar.tech@gmail.com',
     packages=['event_utils', 'kafka_utils'],
     install_requires=['confluent-kafka==1.3.0'],
     version='0.3',
