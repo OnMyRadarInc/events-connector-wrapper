@@ -16,6 +16,7 @@ while True:
     msg = kafka_consumer.get_message(timeout=5.0)
     if msg:
         print(msg.value())
+        print(kafka_consumer.parameters_from_msg(msg))
     else:
         print("No message")
     time.sleep(5)

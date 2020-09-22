@@ -43,6 +43,19 @@ class KafkaConsumer(AbstractConsumer, KafkaConfig):
     def get_message(self, timeout=1):
         return self.kafka_consumer.poll(timeout=timeout)
 
+    @staticmethod
+    def parameters_from_msg(msg):
+        """
+        Get the parameters on the header of a message
+        :param msg:
+        :return:
+        """
+        parameters = {}
+        for header in msg.headers():
+            parameters[header[0]] = str(header[1], "utf-8")
+
+        return parameters, str(msg.value(), "utf-8")
+
 
 class KafkaProducer(AbstractProducer, KafkaConfig):
     """
