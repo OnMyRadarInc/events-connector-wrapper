@@ -5,7 +5,7 @@ setup(
     url='https://github.com/OnMyRadarInc/events-connector-wrapper',
     author='OMR',
     author_email='onmyradar.tech@gmail.com',
-    packages=['event_utils', 'kafka_utils'],
+    packages=['event_utils', 'engines'],
     install_requires=['confluent-kafka==1.3.0'],
     version='0.3',
     license='MIT',
