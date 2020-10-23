@@ -10,7 +10,6 @@ class KafkaConfig:
         self.username = CLOUDKARAFKA_USERNAME
         self.conf = {
             'bootstrap.servers': CLOUDKARAFKA_BROKERS,
-            'group.id': "%s-consumer" % (CLOUDKARAFKA_USERNAME),
             'session.timeout.ms': 6000,
             'default.topic.config': {'auto.offset.reset': 'latest'},
             'security.protocol': 'SASL_SSL',
@@ -26,8 +25,9 @@ class KafkaConsumer(AbstractConsumer, KafkaConfig):
     """
     Class to create a kafka consumer
     """
-    def __init__(self, CLOUDKARAFKA_BROKERS, CLOUDKARAFKA_PASSWORD, CLOUDKARAFKA_USERNAME):
+    def __init__(self, CLOUDKARAFKA_BROKERS, CLOUDKARAFKA_PASSWORD, CLOUDKARAFKA_USERNAME, GROUP_ID):
         super().__init__(CLOUDKARAFKA_BROKERS, CLOUDKARAFKA_PASSWORD, CLOUDKARAFKA_USERNAME)
+        self.conf['group.id'] = "%s-consumer" % (GROUP_ID)
         self.kafka_consumer = Consumer(**self.conf)
 
     def assign_topic(self, topics):
@@ -51,18 +51,25 @@ class KafkaConsumer(AbstractConsumer, KafkaConfig):
         :return:
         """
         parameters = {}
-        for header in msg.headers():
+        headers = msg.headers()
+        value = str(msg.value(), "utf-8")
+        if not headers:
+            return parameters, value
+
+        for header in headers:
             parameters[header[0]] = str(header[1], "utf-8")
 
-        return parameters, str(msg.value(), "utf-8")
+        return parameters, value
 
 
 class KafkaProducer(AbstractProducer, KafkaConfig):
     """
     Class to create a kafka producer
     """
-    def __init__(self, CLOUDKARAFKA_BROKERS, CLOUDKARAFKA_PASSWORD, CLOUDKARAFKA_USERNAME):
+    def __init__(self, CLOUDKARAFKA_BROKERS, CLOUDKARAFKA_PASSWORD, CLOUDKARAFKA_USERNAME, GROUP_ID=None):
         super().__init__(CLOUDKARAFKA_BROKERS, CLOUDKARAFKA_PASSWORD, CLOUDKARAFKA_USERNAME)
+        if GROUP_ID:
+            self.conf['group.id'] = "%s-consumer" % (GROUP_ID)
         self.kafka_producer = Producer(**self.conf)
 
     def send_message(self, topic: str, message: str, headers: dict = None):
