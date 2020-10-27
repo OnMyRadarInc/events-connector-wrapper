@@ -3,3 +3,5 @@
 /build
 /event_connectors_wrapper_test.egg-info/
 *.egg-info
+/venv
+/.env
