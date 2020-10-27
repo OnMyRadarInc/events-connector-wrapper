@@ -1,5 +1,10 @@
+import logging
+import sys
 import time
 from event_utils.event_utils import EventProducer
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 CLOUDKARAFKA_BROKERS='{brokers list separated by commas}'
 CLOUDKARAFKA_PASSWORD='{password}'
@@ -15,7 +20,7 @@ kafka_producer = EventProducer('kafka', config).create_producer()
 
 count = 0
 while True:
-    print("sending message")
+    logger.info("sending message")
     kafka_producer.send_message('TEST', 'TEST-' + str(count))
     count += 1
     time.sleep(2)
