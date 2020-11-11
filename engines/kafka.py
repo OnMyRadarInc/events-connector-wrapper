@@ -1,6 +1,11 @@
+import json
+import logging
+import sys
 from event_utils.abstract import AbstractConsumer, AbstractProducer
 from confluent_kafka import Consumer, Producer
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 class KafkaConfig:
     """
@@ -16,7 +21,7 @@ class KafkaConfig:
             'sasl.mechanisms': 'SCRAM-SHA-256',
             'sasl.username': CLOUDKARAFKA_USERNAME,
             'sasl.password': CLOUDKARAFKA_PASSWORD,
-            'auto.offset.reset': 'latest',
+            'auto.offset.reset': 'earliest',
             'partition.assignment.strategy': 'roundrobin'
         }
 
@@ -40,7 +45,7 @@ class KafkaConsumer(AbstractConsumer, KafkaConfig):
             final_topics.append(self.username + '-' + item)
         self.kafka_consumer.subscribe(final_topics)
 
-    def get_message(self, timeout=1):
+    def get_message(self, timeout=None):
         return self.kafka_consumer.poll(timeout=timeout)
 
     @staticmethod
@@ -50,16 +55,20 @@ class KafkaConsumer(AbstractConsumer, KafkaConfig):
         :param msg:
         :return:
         """
-        parameters = {}
         headers = msg.headers()
         value = str(msg.value(), "utf-8")
+
+        json_message = json.loads(value)
+        event = json_message['event']
+        parameters = json_message['body']
+
         if not headers:
             return parameters, value
 
         for header in headers:
             parameters[header[0]] = str(header[1], "utf-8")
 
-        return parameters, value
+        return parameters, event
 
 
 class KafkaProducer(AbstractProducer, KafkaConfig):
@@ -72,15 +81,33 @@ class KafkaProducer(AbstractProducer, KafkaConfig):
             self.conf['group.id'] = "%s-consumer" % (GROUP_ID)
         self.kafka_producer = Producer(**self.conf)
 
-    def send_message(self, topic: str, message: str, headers: dict = None):
+    @staticmethod
+    def message_log(err, msg):
+        """
+        Gets an error and a message and handles the current message log
+        :param err: Error, its None if the message was correctly sent
+        :param msg: Message object from kafka
+        """
+        if err is not None:
+            logger.error("Failed to deliver message: %s: %s" % (str(msg.value()), str(err)))
+        else:
+            logger.info("Message produced: %s" % (str(msg.value())))
+
+
+    def send_message(self, topic: str, event: str, body: dict = None, headers: dict = None, withLog: bool = False):
         """
         Sends a message to for given topic to the kafka service
-        :param message: String with the message to be send to the kafka service. Ie. 'some message'
+        :param event: String with the event to be send to the kafka service. Ie. 'some message'
         :param topic: String with the topic of the message. Ie. 'introduction-topic'
+        :param body: Dict with the body of the message
         :param headers: Dict with additional headers for the message. Ie. {'header1': 'value1', 'header2': 'value2'}
         """
         msg_headers = []
-        if headers is not None:
+        message = {
+            'event': event,
+            'body': body
+        }
+        if headers:
             for header in headers.keys():
                 msg_headers.append((
                     header,
@@ -88,7 +115,13 @@ class KafkaProducer(AbstractProducer, KafkaConfig):
                 ))
         try:
             topic = self.username + '-' + topic
-            self.kafka_producer.produce(topic, message, headers=msg_headers)
+            json_message = json.dumps(message)
+            args = {
+                'headers': msg_headers,
+            }
+            if withLog:
+                args['callback'] = self.message_log
+            self.kafka_producer.produce(topic, json_message, **args)
             self.kafka_producer.flush()
         except BufferError as e:
             raise
