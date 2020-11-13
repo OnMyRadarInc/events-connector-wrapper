@@ -17,10 +17,12 @@ config= {
 }
 
 kafka_producer = EventProducer('kafka', config).create_producer()
+TEST = kafka_producer.create_mapper_class('TEST', ['TEST-A', 'TEST-B'])
 
 count = 0
 while True:
     logger.info("sending message")
-    kafka_producer.send_message('TEST', 'TEST-' + str(count))
+    body = {"something": 'a'}
+    kafka_producer.send_message(TEST.get_topic(), TEST.get_event('TEST-A'), body, withLog=True)
     count += 1
     time.sleep(2)

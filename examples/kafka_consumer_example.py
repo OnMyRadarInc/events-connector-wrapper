@@ -19,8 +19,9 @@ config= {
 }
 
 kafka_consumer = EventConsumer('kafka', config).create_consumer()
+TEST = kafka_consumer.create_mapper_class('TEST', ['TEST-A', 'TEST-B'])
 
-topics = ['TEST']
+topics = [TEST.get_topic()]
 kafka_consumer.assign_topic(topics)
 
 while True:

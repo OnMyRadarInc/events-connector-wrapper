@@ -7,6 +7,34 @@ from confluent_kafka import Consumer, Producer
 logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
+
+class TopicEventMapper(object):
+    mapper = {}
+
+    def __init__(self, topic: str, events: list):
+        self.__topic_name = topic
+        self.mapper = {
+            topic: {}
+        }
+        for event in events:
+            self.mapper[topic][event] = event
+
+    def get_event(self, event_name):
+        """
+        Returns an event given the event name
+        :param event_name: String with the type of event
+        :return: String with the mapped event
+        """
+        return self.mapper[self.__topic_name][event_name]
+
+    def get_topic(self):
+        """
+        Returns topic name
+        :return: String with the topic name
+        """
+        return self.__topic_name
+
+
 class KafkaConfig:
     """
     Class with init function doing basic configuration for kafka service
@@ -25,6 +53,15 @@ class KafkaConfig:
             'partition.assignment.strategy': 'roundrobin'
         }
 
+    @staticmethod
+    def create_mapper_class(topic: str, events: list) -> TopicEventMapper:
+        """
+        Creates a topic mapper class
+        :param topic: String with the name of the topic
+        :param events: List of strings with the events
+        :return: TopicEventsMapper class
+        """
+        return TopicEventMapper(topic, events)
 
 class KafkaConsumer(AbstractConsumer, KafkaConfig):
     """
