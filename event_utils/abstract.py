@@ -13,5 +13,5 @@ class AbstractConsumer:
 
 class AbstractProducer:
     @abstractmethod
-    def send_message(self, topic, message, headers):
+    def send_message(self, topic: str, event: str, body: dict = None, headers: dict = None):
         pass
