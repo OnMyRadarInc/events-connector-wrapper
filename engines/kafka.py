@@ -100,7 +100,7 @@ class KafkaConsumer(AbstractConsumer, KafkaConfig):
         parameters = json_message['body']
 
         if not headers:
-            return parameters, value
+            return parameters, event
 
         for header in headers:
             parameters[header[0]] = str(header[1], "utf-8")
